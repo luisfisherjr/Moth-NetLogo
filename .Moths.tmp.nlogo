@@ -196,8 +196,7 @@ to move-thru-field
   fd 1
 end
 
-;; update the moth lost status. alter the moth apperance based on status so
-;; they can be easily distinguished
+;; update the moth lost status. a
 to update-lost-moth [m isLost]
   ask m
   [
@@ -339,7 +338,7 @@ sensitivity
 sensitivity
 .25
 3
-0.5
+1.0
 0.25
 1
 NIL
