@@ -8,7 +8,7 @@ globals
   ;;   higher value will lead to greater light's intensity
   ;; NUMBER-LIGHTS
   ;;   number of lights to be created
-  ;; LUMINACE
+  ;; LUMINANCE
   ;;   influences how bright the lights will be
   ;;   higher luminance can be sensed by moths from farther away
   ;;   affects the value of light's intensity
@@ -24,7 +24,7 @@ globals
 lights-own
 [
   ;; determines the size, amount of light emitted
-  ;; value is determine randomly and is influneced by LUMINACE
+  ;; value is determine randomly and is influneced by LUMINANCE
   intensity
 ]
 
@@ -69,26 +69,27 @@ to setup-lights
   if (PRESET = "CUSTOM-LIGHTS") [setup-custom-lights-preset]
 end
 
+;; create number of lights with even space between them.
+to setup-ordered-lights [number forward-distance]
+  create-ordered-lights number
+  [
+    apply-default-light-setting
+    forward forward-distance
+  ]
+end
+
 ;; create lights and place them randomly
 to setup-custom-lights-preset
   create-lights NUMBER-LIGHTS
   [
-    default-light-setting
+    apply-default-light-setting
     ;; place the agently randomly on an xcor and ycor (depending on where the agent is "heading")
     ;; but not too close to the "edge"
     jump 10 + random-float (max-pxcor - 30)
   ]
 end
 
-to setup-ordered-lights [number forward-distance]
-  create-ordered-lights number
-  [
-    default-light-setting
-    forward forward-distance
-  ]
-end
-
-to default-light-setting
+to apply-default-light-setting
   set color white
   set intensity random LUMINANCE + 20
   set size sqrt intensity
@@ -123,12 +124,12 @@ to set-field [p]
     [set amount amount * 1000]
     [set amount amount / rsquared]
 
-  ask p
-    [set light-level light-level + amount]
+  ask p [set light-level light-level + amount]
 end
 
 to-report max-light-intensity
-  if count  lights <= 0
+  ;; if there is no light, return a high value to make all the patch very dark (essentially black)
+  if count lights <= 0
     [report 100000]
   report sqrt (20 * max [intensity] of lights)
 end
@@ -137,8 +138,8 @@ to setup-moths
   create-moths NUMBER-MOTHS
   [
     ifelse (random 2 = 0)
-      [ set direction 1 ]
-      [ set direction -1 ]
+      [set direction 1]
+      [set direction -1]
     set color white
     jump random-float max-pxcor
     set size 5
@@ -175,9 +176,14 @@ to move-thru-field
       ;; face towards the patch, within radius, with the brightest light
       maximize
 
-      ;; if the light ahead is not above the sensitivity threshold head towards the light
-      ;; otherwise move randomly
-      ifelse ([light-level] of patch-ahead 1 / light-level > (1 + 1 / (10 + SENSITIVITY) ))
+      ;; if the ratio of 'light just ahead' to 'light here' is below a threshold value,
+      ;; then the moths fly forward toward the light.  If the ratio of 'light just ahead' to 'light here'
+      ;; is above a threshold value, then moths turns away from the light.
+      ;; the threshold is determined by the moths' sensitivity to light.
+      let ratio [light-level] of patch-ahead 1 / light-level
+      let threshold 1 + 1 / (10 + SENSITIVITY)
+
+      ifelse ratio > threshold
         [left (direction * TURN-ANGLE)]
         [right flutter-amount 60]
     ]
@@ -498,7 +504,7 @@ Moths exhibit two basic kinds of behavior.  When they detect a light source from
 
 First, moths sense the light in their immediate vicinity and turn toward the direction where the light is greatest.
 
-Second, moths compare the light immediately ahead of them with the light at their current position.  If the ratio of 'light just ahead' to 'light here' is below a threshold value, then the moths fly forward toward the light.  If the ratio of 'light just ahead' to 'light here' is above a threshold value, then moths turns away from the light.  The threshold is determined by the moths' sensitivity to light.
+Second, moths compare the light immediately ahead of them with the light at their current position.  **If the ratio of 'light just ahead' to 'light here' is below a threshold value, then the moths fly forward toward the light.  If the ratio of 'light just ahead' to 'light here' is above a threshold value, then moths turns away from the light.  The threshold is determined by the moths' sensitivity to light**.
 
 If the moths do not detect any light, or if there simply are no lights in the space where the moths are flying, then the moths flutter about randomly.
 
