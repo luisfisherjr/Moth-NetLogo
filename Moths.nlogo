@@ -107,7 +107,6 @@ to setup-patches
     ]
 end
 
-
 ;; calculate the light level of a patch due to one light (agent)
 ;; proportional to the distance from the light sqaured
 ;; p: patch to calculate
@@ -115,7 +114,7 @@ end
 to set-field [p]
   ;; calculate the amount of light-level the patch should have
   let rsquared (distance p) ^ 2
-  let amount intensity * scale-factor
+  let amount intensity * SCALE-FACTOR
 
   ;; if there is a light agent is on the center of the patch (extremely unlikely),
   ;; set the amount to a very high value
@@ -127,7 +126,6 @@ to set-field [p]
   ask p
     [set light-level light-level + amount]
 end
-
 
 to-report max-light-intensity
   if count  lights <= 0
@@ -152,7 +150,7 @@ end
 ;;;;;;;;;;;;;;;;;;;
 
 to go
-  ask moths [ move-thru-field ]
+  ask moths [move-thru-field]
   tick
 end
 
@@ -180,20 +178,15 @@ to move-thru-field
       ;; if the light ahead is not above the sensitivity threshold head towards the light
       ;; otherwise move randomly
       ifelse ([light-level] of patch-ahead 1 / light-level > (1 + 1 / (10 + SENSITIVITY) ))
-      [
-        left (direction * TURN-ANGLE)
-      ]
-      [
-        right flutter-amount 60
-      ]
+        [left (direction * TURN-ANGLE)]
+        [right flutter-amount 60]
     ]
   ]
-
   ;; face towards the brightest light if agent cannot move ahead
   if not can-move? 1 [maximize]
 
   ;; move forward
-  fd 1
+  forward 1
 end
 
 ;; update the moth lost status. alter the moth apperance based on status so
@@ -203,8 +196,8 @@ to update-lost-moth [m isLost]
   [
     set lost isLost
     ifelse isLost
-      [set color green set size 7]
-      [set color white set size 5]
+      [set color green]
+      [set color white]
   ]
 end
 
@@ -220,6 +213,20 @@ to maximize
   face max-one-of patches in-radius 1 [light-level]
 end
 
+;;;;;;;;;;;;;;;;;;;;;;;
+;; ACTION PROCECURES ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+to replace-moths
+  ask moths [die]
+  setup-moths
+end
+
+to replace-lights
+  ask lights [die]
+  setup-lights
+  setup-patches
+end
 
 ; Copyright 2005 Uri Wilensky.
 ; See Info tab for full copyright and license.
@@ -227,11 +234,11 @@ end
 GRAPHICS-WINDOW
 606
 10
-1218
-623
+1291
+696
 -1
 -1
-3.0
+2.25
 1
 10
 1
@@ -241,10 +248,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--100
-100
--100
-100
+-150
+150
+-150
+150
 1
 1
 1
@@ -273,8 +280,8 @@ SLIDER
 10
 296
 43
-luminance
-luminance
+LUMINANCE
+LUMINANCE
 1
 10
 1.0
@@ -320,11 +327,11 @@ SLIDER
 10
 173
 43
-number-moths
-number-moths
+NUMBER-MOTHS
+NUMBER-MOTHS
 1
-20
-20.0
+50
+49.0
 1
 1
 NIL
@@ -335,11 +342,11 @@ SLIDER
 46
 185
 79
-sensitivity
-sensitivity
+SENSITIVITY
+SENSITIVITY
 .25
 3
-0.5
+0.75
 0.25
 1
 NIL
@@ -348,13 +355,13 @@ HORIZONTAL
 SLIDER
 186
 46
-371
+396
 79
-turn-angle
-turn-angle
+TURN-ANGLE
+TURN-ANGLE
 45
 180
-95.0
+90.0
 5
 1
 degrees
@@ -391,7 +398,7 @@ BUTTON
 126
 218
 pen down
-ask one-of moths\n[\n  pen-down\n  set color red\n]
+ask one-of moths [pen-down]
 NIL
 1
 T
@@ -408,7 +415,7 @@ BUTTON
 190
 218
 stop
-ask moths \n[\n  pen-up\n  set color white\n]\nclear-drawing
+ask moths [pen-up]\nclear-drawing
 NIL
 1
 T
@@ -423,10 +430,55 @@ MONITOR
 1
 286
 90
-332
+331
 "lost" moths
 count moths with [lost = true]
 17
+1
+11
+
+BUTTON
+-1
+219
+137
+252
+replace-moths
+replace-moths\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+139
+219
+268
+252
+replace-lights
+replace-lights\n
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+MONITOR
+90
+287
+200
+332
+"happy" moths
+count moths with [lost = false]
+2
 1
 11
 
